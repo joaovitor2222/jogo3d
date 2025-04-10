@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tutorial - Jogo 3D RPG</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background-color: #1e1e1e;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      color: #00ff88;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: auto;
+      background: #222;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0, 255, 136, 0.5);
+    }
+
+    .step {
+      margin-bottom: 20px;
+      padding: 10px;
+      background: #333;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .step:hover {
+      background: #00ff88;
+      color: black;
+    }
+
+    .step-content {
+      display: none;
+      padding-top: 10px;
+      text-align: left;
+    }
+
+    button {
+      background: #00ff88;
+      color: black;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 10px;
+    }
+
+    button:hover {
+      background: #0088cc;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🎮 Tutorial - Jogo 3D RPG</h1>
+
+  <div class="container">
+
+    <div class="step" onclick="toggleStep(1)">
+      <h2>📌 Objetivo do Jogo</h2>
+      <div class="step-content" id="step1">
+        <p>O seu objetivo é derrotar uma sequência de inimigos, ajustando a dificuldade do jogo conforme avança. Sobreviva, ganhe moedas com seus acertos e adquira itens na loja para melhorar seu desempenho em combate!</p>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggleStep(2)">
+      <h2>🎯 Controles</h2>
+      <div class="step-content" id="step2">
+        <p><b>Teclado:</b></p>
+        <ul>
+          <li><b>Setas:</b> Movimentam o personagem (respeitando a velocidade definida pelo jogo).</li>
+          <li><b>Teclas G e J:</b> Atacam para a esquerda e direita, respectivamente.</li>
+        </ul>
+        <p><b>Mobile:</b> Use o joystick virtual para se mover e os botões na tela para atacar.</p>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggleStep(3)">
+      <h2>💰 Loja de Itens</h2>
+      <div class="step-content" id="step3">
+        <p>Abra a loja clicando no botão <b>🛒 Loja</b> para adquirir melhorias. Enquanto a loja estiver aberta, o jogo pausa para que você possa comprar com tranquilidade.</p>
+        <p>Itens disponíveis:</p>
+        <ul>
+          <li><b>Poção Cura Pequena:</b> Restaura 300HP - 200 moedas</li>
+          <li><b>Poção Cura Média:</b> Restaura 1000HP - 500 moedas</li>
+          <li><b>Poção Cura Grande:</b> Restaura 5000HP - 1200 moedas</li>
+          <li><b>Veneno:</b> Causa 1800 de dano total + redução de velocidade do inimigo - 800 moedas</li>
+          <li><b>Poção de Velocidade:</b> Aumenta a velocidade do player em 30% por <b>18 segundos</b> - 600 moedas</li>
+          <li><b>Super Velocidade:</b> Aumenta a velocidade do player em 60% por <b>18 segundos</b> - 1400 moedas</li>          
+          <li><b>Invencibilidade:</b> Player imune por 8s - 1600 moedas</li>
+          <li><b>Dobro de Moedas:</b> Ganha o dobro de moedas por tiro acertado por 30s - 500 moedas</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggleStep(4)">
+      <h2>⚔️ Combate</h2>
+      <div class="step-content" id="step4">
+        <p>Use os ataques para reduzir a vida dos inimigos. Cada tiro certeiro lhe rende moedas; com o efeito <b>Dobro de Moedas</b> ativado, você acumula recompensas duplicadas!</p>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggleStep(5)">
+      <h2>🚦 Sistema de Dificuldade</h2>
+      <div class="step-content" id="step5">
+        <p>Escolha a dificuldade do jogo antes de começar:</p>
+        <ul>
+          <li><b>Fácil:</b> Inimigos com vida e velocidade moderadas.</li>
+          <li><b>Médio:</b> Desafio equilibrado.</li>
+          <li><b>Difícil:</b> Inimigos mais rápidos e resistentes.</li>
+        </ul>
+        <p>Isso afeta atributos como velocidade do inimigo e quantidade da vida do inimigo gerado.</p>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggleStep(6)">
+      <h2>🏆 Como Vencer</h2>
+      <div class="step-content" id="step6">
+        <p>Derrote todos os inimigos para conquistar a vitória! Fique atento aos efeitos dos itens comprados e ajuste sua estratégia conforme a dificuldade aumenta.</p>
+      </div>
+    </div>
+
+    <div class="step" onclick="toggleStep(7)">
+      <h2>🧙‍♂️ Minion de Suporte</h2>
+      <div class="step-content" id="step7">
+        <p>Durante o jogo, você pode contar com um <b>minion aliado</b> que ajuda no combate atacando os inimigos automaticamente.</p>
+        <p>Ele ataca com base no tempo, velocidade de disparo e na distância, facilitando muito nas fases mais difíceis.</p>
+        <p>Você pode <b>evoluir o minion</b> comprando upgrades na loja:</p>
+        <ul>
+          <li><b>Minion Nível 1:</b> Atira de tempos em tempos causando 50 de dano por tiro.</li>
+          <li><b>Minion Nível 2:</b> Dano aumentado para 100 por tiro + redução no tempo entre os disparos - 1500 moedas</li>
+          <li><b>Minion Nível 3:</b> Dano de 200 + dispara mais rápido + chance de congelar inimigo por 8s - 3000 moedas</li>
+        </ul>
+        <p>Você só pode evoluir o minion uma vez por nível, e os upgrades são permanentes enquanto durar a partida.</p>
+      </div>
+    </div>
+    
+
+    <div class="step" onclick="toggleStep(8)">
+      <h2>📖 Créditos</h2>
+      <div class="step-content" id="step8">
+        <ul style="text-align: left;">
+            <li><strong>Meu canal:</strong> <a href="https://www.youtube.com/@ArturGamesMods_OFC" target="_blank">Artur Games e Mods</a></li>
+            <li><strong>ChatGPT:</strong> <a href="https://chatgpt.com/" target="_blank">https://chatgpt.com/</a></li>
+            <li><strong>Canal do meu irmão:</strong> <a href="https://www.youtube.com/@isobu2222" target="_blank">Isobu</a></li>
+            <li><strong>Parceiros:</strong>
+                <ul>
+                    <li>Arabian Brazilian Proasso – <a href="https://www.youtube.com/@brazilianyt-nf8" target="_blank">Canal</a></li>
+                    <li>Loft Craft – <a href="https://www.youtube.com/@loftcraft348" target="_blank">Canal</a></li>
+                    <li>RIOBALL🇧🇷 (AG) #NuevaEraSitcker – <a href="https://www.youtube.com/@RIOBALL300" target="_blank">Canal</a></li>
+                    <li>Vitor Neves – <a href="https://www.youtube.com/@vitorneves1162" target="_blank">Canal</a></li>
+                    <li>China Ball Oficial – <a href="https://www.youtube.com/@china_balloficialseinscreva" target="_blank">Canal</a></li>
+                    <li>Duan Countryballs – <a href="https://www.youtube.com/@Duanzitoyytofc01" target="_blank">Canal</a></li>
+                    <li>🇵🇾Paraguai Redondo – <a href="https://www.youtube.com/@Paraguaibola" target="_blank">Canal</a></li>
+                    <li>_WhiteBalls01 – <a href="https://www.youtube.com/@WhiteBalls" target="_blank">Canal</a></li>
+                    <li>BislachaZoa – <a href="https://www.youtube.com/@BislachaZoa" target="_blank">Canal</a></li>
+                    <li>Cauã Rsmos Country – <a href="https://www.youtube.com/@cauarsmos1345" target="_blank">Canal</a></li>
+                    <li>Brasil Ball – <a href="https://www.youtube.com/@brasilball_01" target="_blank">Canal</a></li>
+                    <li>Juninho Original – <a href="https://www.youtube.com/@Juninhocountryball" target="_blank">Canal</a> <span style="color: red;">se inscrevam no canal dele pq ele perdeu o canal 😥 </span></li>
+                    <li>Player – <a href="https://www.youtube.com/@Player2-b3t" target="_blank">Canal</a></li>
+                    <li>⚡•Netuno Ball•⚡ – <a href="https://www.youtube.com/@Netuno_Ball01" target="_blank">Canal</a><span style="color: cyan";>antigo panamá ball</span></li>
+                    <li> goatzinho balls #NuevaErastickers – <a href="https://www.youtube.com/@andersonguiradolemes5703" target="_blank">Canal</a></li>
+                </ul>
+            </li>
+        </ul>
+      </div>
+    </div>
+
+    <button onclick="window.location.href='index.html'">🔙 Voltar ao Jogo</button>
+
+  </div>
+
+  <script>
+    function toggleStep(stepNumber) {
+      let stepContent = document.getElementById(`step${stepNumber}`);
+      if (stepContent.style.display === "block") {
+        stepContent.style.display = "none";
+      } else {
+        stepContent.style.display = "block";
+      }
+    }
+  </script>
+
+</body>
+</html>

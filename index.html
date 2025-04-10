@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo 3D RPG</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+
+        #enemy-health-bar {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 300px;
+      height: 20px;
+      background: #444;
+      border: 1px solid #222;
+    }
+
+    #enemy-health-fill {
+      height: 100%;
+      width: 100%;
+      background: red;
+    }
+
+    .controls {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .controls button {
+      padding: 15px 20px;
+      font-size: 16px;
+      border: none;
+      border-radius: 5px;
+      background-color: #444;
+      color: white;
+    }
+
+    #difficulty-selection {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  gap: 20px;
+  background: rgba(0, 0, 0, 0.7);
+  padding: 20px;
+  border-radius: 10px;
+  z-index: 1000;
+}
+
+#difficulty-selection button {
+  padding: 15px 25px;
+  font-size: 18px;
+  background: #333;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+#difficulty-selection button:hover {
+  background: #555;
+}
+
+#joystick-container {
+  position: absolute;
+  left: 20px;
+  bottom: 100px;
+  width: 120px;
+  height: 120px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid #999;
+  border-radius: 50%;
+  touch-action: none;
+  overflow: hidden;
+}
+
+#joystick {
+  width: 60px;
+  height: 60px;
+  background: #888;
+  border-radius: 50%;
+  position: absolute;
+  top: 30px;
+  left: 30px;
+  transition: all 0.1s;
+}
+
+#tutorialButton {
+  position: fixed;
+  top: 20px;
+  left: 140px; /* Ajuste esse valor se o botão da loja for maior ou mais à direita */
+  background: #00ff88;
+  color: black;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: 0.3s;
+  z-index: 1000;
+}
+
+#tutorialButton:hover {
+  background: #0088cc;
+}
+
+
+    </style>
+</head>
+<body>
+
+      
+
+      
+    <div id="enemy-health-bar">
+        <div id="enemy-health-fill"></div>
+      </div>
+
+      <!-- Barra de Vida do Jogador -->
+<div id="player-health-bar" style="position: absolute; top: 40px; left: 50%; transform: translateX(-50%); width: 300px; height: 20px; background: #222; border: 1px solid #000;">
+    <div id="player-health-fill" style="height: 100%; width: 100%; background: limegreen;"></div>
+  </div>
+  
+  <div id="special-bar" style="position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%); width: 300px; height: 20px; background: #333; border: 1px solid #111;">
+    <div id="special-bar-fill" style="height: 100%; width: 0%; background: cyan;"></div>
+  </div>
+
+  <!-- Indicador de Buffs -->
+<div id="buff-indicators" style="position: absolute; top: 100px; left: 10px; background: rgba(0,0,0,0.6); padding: 10px; color: white; font-size: 14px; border-radius: 5px;">
+  <strong>Buffs Ativos:</strong>
+  <ul id="buff-list" style="margin: 0; padding-left: 20px;"></ul>
+</div>
+
+
+  <button onclick="window.location.href='tutorial.html'" id="tutorialButton">📘 Tutorial</button>
+
+
+  <!-- Botão Loja -->
+<button id="open-shop" style="position: absolute; top: 10px; right: 10px; padding: 10px 20px;">🛒 Loja</button>
+
+<!-- Janela da Loja -->
+<div id="shop" style="display:none; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.9); padding: 30px; border-radius: 15px; color: white; z-index: 2000; text-align: center;">
+  <h2>🧪 Loja de Itens</h2>
+  <p>Ouro: <span id="gold">0</span></p>
+  <div style="display: flex; flex-direction: column; gap: 10px; align-items: center;">
+    <button onclick="buyItem('smallHeal')">Poção Cura Pequena (+300HP) - 200💰</button>
+    <button onclick="buyItem('mediumHeal')">Poção Cura Média (+1000HP) - 500💰</button>
+    <button onclick="buyItem('largeHeal')">Poção Cura Grande (+5000HP) - 1200💰</button>
+    <button onclick="buyItem('poison')">Veneno (1800 Dano + Lento) - 800💰</button>
+    <button onclick="buyItem('speed')">Poção de Velocidade (30% 18s) - 600💰</button>
+    <button onclick="buyItem('superspeed')">Super Velocidade (60% 18s) - 1400💰</button>
+    <button onclick="buyItem('invincible')">Invencibilidade (8s) - 1600💰</button>
+    <button onclick="buyItem('doubleCoins')" style="color: gold;">💰 Dobro de moedas (30s) - 500💰</button>
+<!-- Minion e upgrades -->
+<button onclick="buyItem('spawnMinion')">🧿 Spawnar Minion (1200)</button>
+<button id="upgrade1" onclick="buyItem('minionUpgrade1')">⬆️ Upgrade Minion Nível 1 (1000)</button>
+<button id="upgrade2" onclick="buyItem('minionUpgrade2')" style="display:none;">⬆️ Upgrade Minion Nível 2 (2800)</button>
+<button id="upgrade3" onclick="buyItem('minionUpgrade3')" style="display:none;">⬆️ Upgrade Minion Nível 3 (5000)</button>
+
+
+
+    <button onclick="closeShop()">Fechar Loja</button>
+  </div>
+</div>
+
+    
+      <div class="controls">
+        <button onclick="moveLeft()">⬅️</button>
+        <button onclick="moveRight()">➡️</button>
+        <button onclick="attackLeft()">Atacar ⬅️</button>
+        <button onclick="attackRight()">Atacar ➡️</button>
+      </div>
+
+      <div id="joystick-container">
+        <div id="joystick"></div>
+      </div>
+      
+
+      <div id="difficulty-selection">
+        <button onclick="setDifficulty('easy')">Fácil</button>
+        <button onclick="setDifficulty('medium')">Médio</button>
+        <button onclick="setDifficulty('hard')">Difícil</button>
+      </div>
+</body>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Inicializando o mundo 3D
+        var scene, camera, renderer;
+        var player, enemy;
+        var mago, arqueiro, cavaleiro;
+        var playerHealth = 500;  // Vida base para o Mago
+        const enemyDamagePerSecond = 50;
+        var enemyHealth = 1000;  // Vida do inimigo (triângulo amarelo)
+        var enemyDamage = 50;  // Dano do inimigo por segundo
+        var enemyPosition = { x: 5, y: 1, z: 0 }; // Posição do inimigo
+        let touching = false;
+    let lastDamageTime = 0;
+    let maxPlayerHealth = 5000;
+    let enemyCount = 0; // 
+    var enemyBaseHealth = 1000;
+    var maxEnemies = 10;
+    const joystickContainer = document.getElementById("joystick-container");
+    const joystick = document.getElementById("joystick");
+    let victoryTriggered = false;
+
+    let dragging = false;
+    let origin = { x: 0, y: 0 };
+
+    let difficulty = "easy";
+    let attackHits = 0;
+    let specialCharge = 0;
+    let specialReady = false;
+    let frozen = false;
+    let enemySpeedMultiplier = 1;
+    let gold = 0;
+    let paused = false;
+    let invincible = false;
+    let originalSpeed = 0.1;
+    let doubleCoinsActive = false;
+    let playerSpeed = originalSpeed;
+    let speedBuffCount = 0; // contador de buffs ativos
+    let activeBuffs = []; // Para exibir quais buffs estão ativos
+
+    let currentEnemyPosition = { x: 0, y: 0 }; // posição inicial (pode ser qualquer valor)
+
+let minion = null;
+let minionCooldown = false;
+let minionLevel = 0; // 0 = sem upgrade, 1-3 = upgrades
+    
+const minionSettings = [
+  { duration: 20000, fireRate: 2000, multiplier: 1 },     // Nível 0
+  { duration: 25000, fireRate: 1333, multiplier: 1.5 },   // Nível 1
+  { duration: 30000, fireRate: 1000, multiplier: 1 },     // Nível 2
+  { duration: 38000, fireRate: 666, multiplier: 1.5 }     // Nível 3
+];
+
+
+
+
+const maxEnemyHealth = () => {
+  // Último inimigo no modo difícil → 50.000
+  if (difficulty === "hard" && enemyCount === maxEnemies - 1) return 50000;
+
+  // Último inimigo no modo fácil ou médio → 20.000
+  if ((difficulty === "easy" || difficulty === "medium") && enemyCount === maxEnemies - 1) return 20000;
+
+  // Inimigos normais com vida progressiva
+  return enemyBaseHealth * Math.pow(1.5, enemyCount);
+};
+
+  
+function setDifficulty(level) {
+  difficulty = level;
+
+// Remove os botões da tela
+const div = document.getElementById("difficulty-selection");
+div.parentNode.removeChild(div);
+
+  if (level === "easy") {
+    enemySpeedMultiplier = 1;
+    maxEnemies = 10;
+  } else if (level === "medium") {
+    enemySpeedMultiplier = 1.25;
+    maxEnemies = 10;
+  } else if (level === "hard") {
+    enemySpeedMultiplier = 1.4;
+    maxEnemies = 15;
+  }
+  enemyCount = 0;
+  playerHealth = 500;
+  updatePlayerHealthBar();
+  scene.remove(enemy);
+  spawnEnemy();
+  alert(`Dificuldade definida: ${level.toUpperCase()}`);
+}
+
+function spawnMinion() {
+  if (minionCooldown || minion !== null) {
+    alert("⏳ Aguarde o minion anterior expirar.");
+    return;
+  }
+
+  const settings = minionSettings[minionLevel];
+  minion = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshBasicMaterial({ color: 0x0000ff })
+  );
+  minion.position.set(player.position.x + 2, 1, player.position.z);
+  scene.add(minion);
+
+  minionCooldown = true;
+  fireMinionProjectiles(settings);
+
+  setTimeout(() => {
+    scene.remove(minion);
+    minion = null;
+    minionCooldown = false;
+  }, settings.duration);
+}
+
+function updateEnemyPosition(enemy) {
+  currentEnemyPosition.x = enemy.x;
+  currentEnemyPosition.y = enemy.y;
+}
+
+
+function freezeEnemyByMinion() {
+  frozen = true;
+  console.log("❄️ Inimigo congelado pelo minion por 8 segundos!");
+
+  setTimeout(() => {
+    frozen = false;
+    console.log("⏳ Inimigo descongelado do efeito do minion.");
+  }, 8000);
+}
+
+
+function fireMinionProjectiles(settings) {
+  const shoot = () => {
+    if (!minion || enemyHealth <= 0) return;
+
+    for (let i = 0; i < settings.multiplier; i++) {
+      const proj = new THREE.Mesh(
+        new THREE.SphereGeometry(0.2),
+        new THREE.MeshBasicMaterial({ color: 0x00ffff })
+      );
+      proj.position.copy(minion.position);
+      scene.add(proj);
+
+      // Calcula a direção para o inimigo
+      const dx = enemy.position.x - proj.position.x;
+      const dy = enemy.position.y - proj.position.y;
+      const dz = enemy.position.z - proj.position.z;
+
+
+      const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      const speed = 0.15;
+
+      const direction = {
+        x: (dx / dist) * speed,
+        y: (dy / dist) * speed,
+        z: (dz / dist) * speed
+      };
+
+      const move = () => {
+        proj.position.x += direction.x;
+        proj.position.y += direction.y;
+        proj.position.z += direction.z;
+
+        // Verifica se colidiu com o inimigo
+        const distanceToEnemy = proj.position.distanceTo(enemy.position);
+        if (distanceToEnemy < 1) {
+          takeEnemyDamage(80); // Dano fixo
+          updateGold(doubleCoinsActive ? 20 : 10);
+            // 👇 Verifica se o minion é nível 3 e tenta congelar o inimigo
+            if (minionLevel === 3) {
+            const chance = Math.random();
+            if (chance < 0.2 && !frozen) {
+              freezeEnemyByMinion();
+            }
+
+          }
+          scene.remove(proj);
+          return;
+        }
+
+        // Remove se sair da tela
+        if (Math.abs(proj.position.x) > 20 || Math.abs(proj.position.z) > 20) {
+          scene.remove(proj);
+          return;
+        }
+
+        requestAnimationFrame(move);
+      };
+      move();
+    }
+
+    setTimeout(shoot, settings.fireRate);
+  };
+
+  shoot();
+}
+
+
+
+function activateDoubleCoins() {
+  doubleCoinsActive = true;
+  const duration = 30000; // 30 segundos
+  const buffName = "Moedas em Dobro";
+
+  activeBuffs.push({
+    name: buffName,
+    type: "Player",
+    expiresAt: Date.now() + duration
+  });
+  updateBuffIndicator();
+
+  setTimeout(() => {
+    doubleCoinsActive = false;
+
+    // Remove o buff visual
+    activeBuffs = activeBuffs.filter(buff => buff.name !== buffName);
+    updateBuffIndicator();
+  }, duration);
+}
+
+
+
+
+  function updatePlayerHealthBar() {
+    const bar = document.getElementById("player-health-fill");
+    const percent = Math.max(playerHealth / maxPlayerHealth, 0) * 100;
+    bar.style.width = percent + "%";
+  }
+
+  let playerDerrotado = false;
+
+  function handleDamageWhenTouching() {
+  const now = Date.now();
+  if (paused || invincible) return; // jogo pausado ou invencível
+
+  if (touching && now - lastDamageTime >= 1000) {
+    playerHealth -= enemyDamagePerSecond;
+    updatePlayerHealthBar();
+    console.log(`⚔️ Inimigo causou ${enemyDamagePerSecond} de dano. Vida restante: ${playerHealth}`);
+    lastDamageTime = now;
+
+    if (playerHealth <= 0) {
+      playerDerrotado = true;
+      alert("💀 Game Over! Você morreu. clique em ok para tentar novamente");
+      location.reload(); // Reinicia a página após o alerta
+    }
+  }
+}
+
+function updateBuffIndicator() {
+  const container = document.getElementById("buff-indicators");
+  container.innerHTML = ''; // limpa os buffs antigos
+
+  const now = Date.now();
+
+  activeBuffs.forEach(buff => {
+    const div = document.createElement("div");
+    const emoji = buff.type === "Player" ? "🟢" : "🔴";
+    
+    // Se tiver tempo de expiração, calcula o tempo restante
+    let timeRemaining = '';
+    if (buff.expiresAt) {
+      const secondsLeft = Math.max(0, Math.ceil((buff.expiresAt - now) / 1000));
+      timeRemaining = ` - ⏱️ ${secondsLeft}s`;
+    }
+
+    div.textContent = `${emoji} ${buff.name}${timeRemaining}`;
+    div.style.background = buff.type === "Player" ? "rgba(0,255,0,0.2)" : "rgba(255,0,0,0.2)";
+    div.style.color = "#ffffff";
+    div.style.fontWeight = "bold";
+    div.style.textShadow = "1px 1px 2px #000";
+    div.style.padding = "5px 10px";
+    div.style.marginBottom = "5px";
+    div.style.borderRadius = "4px";
+    div.style.fontFamily = "sans-serif";
+    container.appendChild(div);
+  });
+}
+
+
+
+        // Função de ataque (para as classes)
+        class Character {
+    constructor(name, health) {
+      this.name = name;
+      this.health = health;
+    }
+
+    attack(direction) {
+  const projectile = new THREE.Mesh(
+    new THREE.SphereGeometry(specialReady ? 0.6 : 0.2),
+    new THREE.MeshBasicMaterial({ color: specialReady ? 0x00ffff : 0x00cccc })
+  );
+  projectile.position.copy(player.position);
+  scene.add(projectile);
+
+  const speed = 0.2 * (direction === "right" ? 1 : -1);
+
+  const moveProjectile = () => {
+    projectile.position.x += speed;
+
+    if (Math.abs(projectile.position.x - enemy.position.x) < 1) {
+      if (specialReady) {
+        takeEnemyDamage(250);
+        freezeEnemy();
+        specialCharge = 0;
+        specialReady = false;
+      } else {
+        takeEnemyDamage(100);
+        attackHits++;
+        if (attackHits % 5 === 0) {
+          specialCharge += 20;
+          if (specialCharge >= 100) {
+            specialCharge = 100;
+            specialReady = true;
+          }
+          updateSpecialBar();
+        }
+      }
+
+      scene.remove(projectile);
+      return;
+    }
+
+    if (Math.abs(projectile.position.x) > 20) {
+      scene.remove(projectile);
+      return;
+    }
+
+    requestAnimationFrame(moveProjectile);
+  };
+
+  moveProjectile();
+}
+
+  }
+
+        // Função para inimigo tomar dano
+        class Enemy {
+            constructor() {
+        this.health = 1000;
+      }
+
+      takeDamage(amount) {
+        this.health -= amount;
+        console.log(`Inimigo recebeu ${amount} de dano. Vida restante: ${this.health}`);
+        if (this.health <= 0) {
+          alert("Inimigo derrotado!");
+        }
+      }
+        }
+
+        joystickContainer.addEventListener("touchstart", (e) => {
+  dragging = true;
+  const touch = e.touches[0];
+  origin.x = touch.clientX;
+  origin.y = touch.clientY;
+
+});
+
+joystickContainer.addEventListener("touchmove", (e) => {
+  if (!dragging) return;
+
+  const touch = e.touches[0];
+  const deltaX = touch.clientX - origin.x;
+  const deltaY = touch.clientY - origin.y;
+
+  // Limita o deslocamento máximo do joystick
+  const clampedX = Math.max(-40, Math.min(40, deltaX));
+  const clampedY = Math.max(-40, Math.min(40, deltaY));
+
+  joystick.style.left = 30 + clampedX + "px";
+  joystick.style.top = 30 + clampedY + "px";
+
+  // Movimento do jogador com base na direção do joystick
+  if (clampedX < -10) player.position.x -= playerSpeed;
+  if (clampedX > 10) player.position.x += playerSpeed;
+  if (clampedY < -10) player.position.z -= playerSpeed;
+  if (clampedY > 10) player.position.z += playerSpeed;
+});
+
+joystickContainer.addEventListener("touchend", () => {
+  dragging = false;
+  joystick.style.left = "30px";
+  joystick.style.top = "30px";
+});
+
+        function freezeEnemy() {
+  frozen = true;
+  console.log("❄️ Inimigo congelado por 15 segundos!");
+  setTimeout(() => {
+    frozen = false;
+    console.log("⏳ Inimigo voltou ao normal.");
+  }, 15000);
+}
+
+function updateSpecialBar() {
+  const bar = document.getElementById("special-bar-fill");
+  bar.style.width = specialCharge + "%";
+}
+
+        function updateEnemyHealthBar() {
+    const bar = document.getElementById("enemy-health-fill");
+    const percent = Math.max(enemyHealth / maxEnemyHealth(), 0) * 100;
+    bar.style.width = percent + "%";
+  }
+  let enemyDefeated = false;
+
+  function takeEnemyDamage(amount) {
+    if (enemyDefeated) return;
+
+  enemyHealth -= amount;
+  updateEnemyHealthBar();
+
+  // Aplicar efeito do item de dobro de moedas
+  let reward = 10;
+  if (doubleCoinsActive) reward *= 2;
+  updateGold(reward); // Adiciona moedas conforme o efeito
+
+  console.log(`💥 Inimigo recebeu ${amount} de dano. Vida restante: ${enemyHealth}`);
+
+  if (enemyHealth <= 0) {
+  touching = false; // <<< ESSA LINHA EVITA O DANO APÓS MORTE
+  enemyCount++;
+  scene.remove(enemy);
+  if (enemyCount >= maxEnemies) {
+    alert("🏆 Vitória! Você derrotou todos os inimigos!");
+    applyInvincibilityvictory()
+    enemyDefeated = true; // Confirma que o último inimigo foi derrotado
+
+
+// Cria um contêiner fixo para os botões
+const btnContainer = document.createElement("div");
+btnContainer.style.position = "fixed";
+btnContainer.style.bottom = "20px";
+btnContainer.style.right = "20px";
+btnContainer.style.display = "flex";
+btnContainer.style.flexDirection = "column";
+btnContainer.style.gap = "10px";
+btnContainer.style.zIndex = "9999"; // Garante que fica acima dos outros elementos
+document.body.appendChild(btnContainer);
+
+// Estilos básicos para todos os botões
+const baseButtonStyle = `
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  background-color: #4CAF50;
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: background-color 0.3s;
+`;
+const hoverStyle = `
+  background-color: #45a049;
+`;
+
+// Cria botão Dino
+const dinoBtn = document.createElement("button");
+dinoBtn.textContent = "🦖 Testar jogo dos Dinossauros";
+dinoBtn.style.cssText = baseButtonStyle;
+dinoBtn.onmouseover = () => dinoBtn.style.backgroundColor = "#45a049";
+dinoBtn.onmouseout = () => dinoBtn.style.backgroundColor = "#4CAF50";
+dinoBtn.onclick = () => window.location.href = "https://joaovitor2222.github.io/dinos/";
+btnContainer.appendChild(dinoBtn);
+
+// Cria botão Tower Defense
+const towerBtn = document.createElement("button");
+towerBtn.textContent = "🛡️ Testar Tower Defense Reverso";
+towerBtn.style.cssText = baseButtonStyle;
+towerBtn.onmouseover = () => towerBtn.style.backgroundColor = "#45a049";
+towerBtn.onmouseout = () => towerBtn.style.backgroundColor = "#4CAF50";
+towerBtn.onclick = () => window.location.href = "https://joaovitor2222.github.io/jogozueira/";
+btnContainer.appendChild(towerBtn);
+
+// Cria botão Vídeo YouTube
+const videoBtn = document.createElement("button");
+videoBtn.textContent = "▶️ Ver video especial para quem zerou esse jogo...";
+videoBtn.style.cssText = baseButtonStyle;
+videoBtn.onmouseover = () => videoBtn.style.backgroundColor = "#45a049";
+videoBtn.onmouseout = () => videoBtn.style.backgroundColor = "#4CAF50";
+videoBtn.onclick = () => window.open("https://youtu.be/p3qGfznpRd0", "_blank");
+btnContainer.appendChild(videoBtn);
+
+
+// Cria botão Reiniciar
+const restartBtn = document.createElement("button");
+restartBtn.textContent = "🔁 Reiniciar Jogo";
+restartBtn.style.cssText = baseButtonStyle;
+restartBtn.onmouseover = () => restartBtn.style.backgroundColor = "#45a049";
+restartBtn.onmouseout = () => restartBtn.style.backgroundColor = "#4CAF50";
+restartBtn.onclick = () => location.reload();
+btnContainer.appendChild(restartBtn);
+
+
+    return;
+  }
+  spawnEnemy();
+}
+
+}
+
+
+function updateUI() {
+    const coinBoostIndicator = document.getElementById("coinBoost");
+    if (doubleCoinsActive) {
+        coinBoostIndicator.style.display = "block";
+    } else {
+        coinBoostIndicator.style.display = "none";
+    }
+
+    // Atualizar outras infos também, tipo coins:
+    document.getElementById("coinDisplay").textContent = `Moedas: ${coins}`;
+}
+
+
+  function spawnEnemy() {
+    const geometry = new THREE.ConeGeometry(1, 3, 3);
+    const material = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    enemy = new THREE.Mesh(geometry, material);
+    enemy.position.set(5, 1, 0);
+    scene.add(enemy);
+
+    enemyHealth = maxEnemyHealth();
+    updateEnemyHealthBar();
+    console.log(`👹 Inimigo ${enemyCount + 1} apareceu com ${enemyHealth} de vida.`);
+
+    // dentro do game loop:
+updateEnemyPosition(enemy); // 'enemy' é o seu objeto do inimigo
+
+  }
+
+// Função para inicializar o mundo 3D
+function init() {
+    // Cena, câmera e renderizador
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    // Criar o terreno (plano)
+    var geometry = new THREE.BoxGeometry(10, 1, 10);
+    var material = new THREE.MeshBasicMaterial({ color: 0x777777 });
+    var ground = new THREE.Mesh(geometry, material);
+    ground.position.y = -0.5;
+    scene.add(ground);
+
+    // Criar o jogador (Mago)
+    var playerGeometry = new THREE.SphereGeometry(1);
+    var playerMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    player = new THREE.Mesh(playerGeometry, playerMaterial);
+    player.position.set(0, 1, 0);
+    scene.add(player);
+
+    // Criar o inimigo (Triângulo Amarelo)
+    var enemyGeometry = new THREE.ConeGeometry(1, 3, 3);
+    var enemyMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
+    enemy = new THREE.Mesh(enemyGeometry, enemyMaterial);
+    enemy.position.set(enemyPosition.x, enemyPosition.y, enemyPosition.z);
+    scene.add(enemy);
+
+    // Configurar a câmera
+    camera.position.z = 10;
+
+    document.addEventListener("keydown", (e) => {
+    if (paused) return; // <-- TEM que estar no topo
+
+    if (e.key === "ArrowLeft") player.position.x -= playerSpeed;
+    else if (e.key === "ArrowRight") player.position.x += playerSpeed;
+    else if (e.key === "ArrowUp") player.position.z -= playerSpeed;
+    else if (e.key === "ArrowDown") player.position.z += playerSpeed;
+
+    else if (e.key.toLowerCase() === "g") mago.attack("left");
+    else if (e.key.toLowerCase() === "j") mago.attack("right");
+});
+
+    // Criar as classes de personagens (Mago, Arqueiro, Cavaleiro)
+    mago = new Character("Mago", 500, "aoe");
+    arqueiro = new Character("Arqueiro", 300, "ranged");
+    cavaleiro = new Character("Cavaleiro", 1000, "melee");
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  moveEnemyTowardsPlayer();     // Agora roda sempre
+  handleDamageWhenTouching();   // Também sempre
+  renderer.render(scene, camera);
+
+  if (minion) {
+  minion.position.x = player.position.x;
+  minion.position.z = player.position.z + 2; // ou algum offset
+}
+
+}
+
+    // Funções para controles mobile
+    function moveLeft() {
+      player.position.x -= playerSpeed;
+
+          if (paused) return; // impede update se estiver pausado
+    }
+
+    function moveRight() {
+      player.position.x -= playerSpeed;
+
+      if (paused) return; // impede update se estiver pausado
+    }
+
+    function attackLeft() {
+      mago.attack("left");
+
+      if (paused) return; // impede update se estiver pausado
+    }
+
+    function attackRight() {
+      mago.attack("right");
+
+      if (paused) return; // impede update se estiver pausado
+    }
+
+
+
+
+    function moveEnemyTowardsPlayer() {
+  if (frozen) return; // se estiver congelado, não se move
+  if (paused) return; // se loja aberta, não atualiza inimigo
+
+  const dx = player.position.x - enemy.position.x;
+  const dz = player.position.z - enemy.position.z;
+  const distance = Math.sqrt(dx * dx + dz * dz);
+
+  if (distance > 1.5) {
+    enemy.position.x += (dx / distance) * 0.02 * enemySpeedMultiplier;
+    enemy.position.z += (dz / distance) * 0.02 * enemySpeedMultiplier;
+    touching = false;
+  } else {
+    touching = true;
+  }
+}
+
+
+document.getElementById("open-shop").addEventListener("click", () => {
+  paused = true;
+  document.getElementById("shop").style.display = "block";
+});
+
+function closeShop() {
+  paused = false;
+  document.getElementById("shop").style.display = "none";
+}
+
+// Atualiza o ouro do jogador
+function updateGold(amount) {
+  gold += amount;
+  document.getElementById("gold").textContent = gold;
+}
+
+// Função para comprar item
+function buyItem(item) {
+  const prices = {
+    smallHeal: 200,
+  mediumHeal: 500,
+  largeHeal: 1200,
+  poison: 800,
+  speed: 600,
+  superspeed: 1400,
+  invincible: 1600,
+  doubleCoins: 500,
+  spawnMinion: 1200,
+  minionUpgrade1: 1000,
+  minionUpgrade2: 2800,
+  minionUpgrade3: 5000
+  };
+
+  if (gold < prices[item]) {
+    alert("💸 Ouro insuficiente!");
+    return;
+  }
+
+  gold -= prices[item];
+  updateGold(0);
+
+  switch (item) {
+    case 'smallHeal': playerHealth = Math.min(playerHealth + 300, maxPlayerHealth); break;
+    case 'mediumHeal': playerHealth = Math.min(playerHealth + 1000, maxPlayerHealth); break;
+    case 'largeHeal': playerHealth = Math.min(playerHealth + 5000, maxPlayerHealth); break;
+    case 'poison': applyPoison(); break;
+    case 'speed': applySpeedBoost(1.3, 18000); break;
+    case 'superspeed': applySpeedBoost(1.6, 18000); break;
+    case 'invincible': applyInvincibility(); break;
+    case 'doubleCoins': activateDoubleCoins(); break;
+    case 'spawnMinion': spawnMinion(); break;
+    case 'minionUpgrade1':
+      if (minionLevel < 1) {
+        minionLevel = 1;
+        document.getElementById('upgrade1').style.display = 'none';
+        document.getElementById('upgrade2').style.display = 'inline-block';
+      }
+      break;
+
+    case 'minionUpgrade2':
+      if (minionLevel < 2) {
+        minionLevel = 2;
+        document.getElementById('upgrade2').style.display = 'none';
+        document.getElementById('upgrade3').style.display = 'inline-block';
+      }
+      break;
+
+    case 'minionUpgrade3':
+      if (minionLevel < 3) {
+        minionLevel = 3;
+        document.getElementById('upgrade3').style.display = 'none';
+      } else {
+        alert("⚠️ Seu minion já está no nível máximo!");
+      }
+      break;
+
+  }
+
+  updatePlayerHealthBar();
+}
+
+
+// Veneno: 800 instantâneo + 200/s por 10s e -60% velocidade
+function applyPoison() {
+  takeEnemyDamage(800);
+  activeBuffs.push({ name: "Veneno", type: "Inimigo" });
+  updateBuffIndicator();
+
+  let poisonTime = 0;
+  const interval = setInterval(() => {
+    if (poisonTime >= 10000 || enemyHealth <= 0) {
+      enemySpeedMultiplier /= 0.4;
+      clearInterval(interval);
+
+      // Remove da lista e atualiza
+      activeBuffs = activeBuffs.filter(buff => buff.name !== "Veneno");
+      updateBuffIndicator();
+      return;
+    }
+    poisonTime += 1000;
+    takeEnemyDamage(200);
+  }, 1000);
+
+  enemySpeedMultiplier *= 0.4;
+}
+
+
+// Buff de velocidade
+function applySpeedBoost(multiplier, duration) {
+  originalSpeed = 0.1;
+  speedBuffCount++;
+  playerSpeed = originalSpeed * multiplier;
+
+  const buffName = `Velocidade x${multiplier.toFixed(1)}`;
+
+  activeBuffs.push({ name: buffName, type: "Player" });
+  updateBuffIndicator();
+
+  setTimeout(() => {
+    speedBuffCount--;
+    if (speedBuffCount <= 0) {
+      playerSpeed = originalSpeed;
+      speedBuffCount = 0;
+    }
+
+    // Remove buff e atualiza
+    activeBuffs = activeBuffs.filter(buff => buff.name !== buffName);
+    updateBuffIndicator();
+  }, duration);
+}
+
+
+// Invencibilidade por 8s
+function applyInvincibility() {
+  invincible = true;
+  activeBuffs.push({ name: "Invencibilidade", type: "Player" });
+  updateBuffIndicator();
+
+  setTimeout(() => {
+    invincible = false;
+    activeBuffs = activeBuffs.filter(buff => buff.name !== "Invencibilidade");
+    updateBuffIndicator();
+  }, 8000);
+}
+
+function applyInvincibilityvictory() {
+  invincible = true;
+  activeBuffs.push({ name: "Invencibilidade", type: "Player" });
+  updateBuffIndicator();
+}
+
+
+
+
+        // Criar o inimigo (triângulo amarelo)
+        const enemyObj = new Enemy();
+
+        init();
+        animate();
+    </script>
+</body>
+</html>
